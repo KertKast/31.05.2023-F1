@@ -1,4 +1,37 @@
 import random
+import csv
+
+racers = ["Lewis", "Hitler", "Stalin", "Yesman", "Blackman"]
+alg, lopp = 23, 26
+
+names = ['Marko', 'Max', 'Lewis', 'Valtteri', 'Nico']
+laps = 10
+filename = 'Result.txt'
+file_header = 'Ring;Nimi;Aeg;Sektor1;Sektor2;Sektor3;Viga\n'
+results = []
+minimum = 23
+maximum = 26
+fastest_lap = ['Unknown', 999]
+three_sectors = [['Unknown', 999], ['Unknown', 999], ['Unknown', 999]]
+sectors_data = []
+
+
+def random_sector_time(mini, maxi):
+    thousandth = random.randint(0, 999) / 1000
+    return random.randint(mini, maxi) + thousandth
+
+
+def one_lap_time(mini, maxi, driver_name):
+    this_total = 0
+    sectors_data.clear()
+    for z in range(3):
+        this_sector = random_sector_time(mini, maxi)
+        if this_sector < three_sectors[z][1]:
+            three_sectors[z][0] = driver_name
+            three_sectors[z][1] = this_sector
+        this_total += this_sector
+        sectors_data.append(this_sector)
+    return this_total
 
 
 def is_fastest_lap(driver_name, fastest_data):
@@ -24,68 +57,43 @@ def sec2time(sec, n_msec=3):
 
 
 if __name__ == '__main__':
-    Filename = 'Result.txt'
-    results = []
-    fastest_lap = ['Unknown', 9999]
-    three_sektors = [['Unknown', 9999], ['Unknown', 9999], ['Unknown', 9999]]
-    lap_times = {}
-    lap_errors = {}
+    f = open(filename, 'w', encoding='utf-8')
+    f.write(file_header)
+    for name in names:
+        lap_times = 0
+        errors = []
+        for lap in range(laps):
+            error = False
+            if random.randint(0, 9) == 2:
+                lap_times += one_lap_time(30, 90, 'Unknown')
+                errors.append(lap + 1)
+                error = True
+            else:
+                this_lap = one_lap_time(minimum, maximum, name)
+                if this_lap < fastest_lap[1]:
+                    fastest_lap[0] = name
+                    fastest_lap[1] = this_lap
+                lap_times += this_lap
+            line = ';'.join([str(lap + 1), name, str(sum(sectors_data)), str(sectors_data[0]),
+                             str(sectors_data[1]), str(sectors_data[2]), str(error)])
+            f.write(line + '\n')
+        results.append([name, lap_times, errors])
+    f.close()
 
-    with open(Filename, 'r', encoding='utf-8') as file:
-        lines = file.readlines()
-        File_header = lines[0]
-        for line in lines[1:]:
-            data = line.strip().split(';')
-            lap = int(data[0])
-            name = data[1]
-            lap_time = float(data[2])
-            sector1 = float(data[3])
-            sector2 = float(data[4])
-            sector3 = float(data[5])
-            error = True if data[6].lower() == 'true' else False
-            if lap_time < fastest_lap[1]:
-                fastest_lap[0] = name
-                fastest_lap[1] = lap_time
-            if sector1 < three_sektors[0][1]:
-                three_sektors[0][0] = name
-                three_sektors[0][1] = sector1
-            if sector2 < three_sektors[1][1]:
-                three_sektors[1][0] = name
-                three_sektors[1][1] = sector2
-            if sector3 < three_sektors[2][1]:
-                three_sektors[2][0] = name
-                three_sektors[2][1] = sector3
+    results = sorted(results, key=lambda x: x[1])
+    print(results)
 
-            if name not in lap_times:
-                lap_times[name] = 0
-            lap_times[name] += lap_time
-
-            if error:
-                if name not in lap_errors:
-                    lap_errors[name] = []
-                lap_errors[name].append(lap)
-
-            results.append([name, lap_time, error])
-
-    lap_times = sorted(lap_times.items(), key=lambda x: x[1])
-
-    rank = 1
-    for idx, (name, total_time) in enumerate(lap_times):
-        time_difference = sec2time(total_time - fastest_lap[1])
-        error_laps = lap_errors.get(name, '[]')
-        time_difference_from_first = sec2time(total_time - lap_times[0][1])
-        fastest_lap_str = is_fastest_lap(name, fastest_lap)
-
-        if idx == 0:
-            print(rank, name.ljust(10), sec2time(total_time), error_laps, fastest_lap_str)
+    for idx, person in enumerate(results):
+        if idx > 0:
+            difference = sec2time(person[1] - results[0][1])
+            print(person[0].ljust(10), sec2time(person[1], 3),
+                  difference, person[2], is_fastest_lap(person[0], fastest_lap))
         else:
-            difference = sec2time(total_time - lap_times[0][1])
-            print(rank, name.ljust(10), sec2time(total_time), difference, error_laps, fastest_lap_str)
+            print(person[0].ljust(10), sec2time(person[1], 3), person[2], is_fastest_lap(person[0], fastest_lap))
 
-        rank += 1
-
-    print('Sektori parimad')
-    total = sum(driver[1] for driver in three_sektors)
-    for idx, driver in enumerate(three_sektors):
+    print('Sektorite parimad')
+    total = 0
+    for idx, driver in enumerate(three_sectors):
+        total += driver[1]
         print('Sektor', (idx + 1), driver[0].ljust(10), sec2time(driver[1]))
-    print('Unelmate Ring', sec2time(total))
+    print('Unelmate ring', sec2time(total))
