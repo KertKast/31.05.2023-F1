@@ -1,103 +1,95 @@
 import random
- 
-racers = ["Kast", "Maku", "Kiku", "Tartu", "Meinberg"]
-alg, lopp = 23, 26
-times = []
-lap_times = {}
-sector_times = {}
- 
- 
-def suvalineaeg(a, b):
-    aeg = round(random.uniform(a, b), 3)
-    return aeg
- 
- 
-def taisringi_aeg(racer):
-    total = 0
-    koperdused = []
-    best_lap_time = float('inf')
-    sector1_best_time = float('inf')
-    sector2_best_time = float('inf')
-    sector3_best_time = float('inf')
- 
-    for i in range(10):
-        s1 = suvalineaeg(alg, lopp)
-        s2 = suvalineaeg(alg, lopp)
-        s3 = suvalineaeg(alg, lopp)
- 
-        # Generate random number in the range of 1-10
-        number = random.randint(1, 10)
-        if number == 2:
-            s1 = suvalineaeg(30, 90)
-            s2 = suvalineaeg(30, 90)
-            s3 = suvalineaeg(30, 90)
-            koperdused.append(i + 1)  # Add the lap number with a mistake
- 
-        kokku = round(s1 + s2 + s3, 3)
-        total += kokku
-        best_lap_time = min(best_lap_time, kokku)
- 
-        sector1_best_time = min(sector1_best_time, s1)
-        sector2_best_time = min(sector2_best_time, s2)
-        sector3_best_time = min(sector3_best_time, s3)
- 
-    lap_times[racer] = best_lap_time
-    sector_times[racer] = [sector1_best_time, sector2_best_time, sector3_best_time]
-    return total, koperdused
- 
- 
-for racer in racers:
-    total_time, koperdused = taisringi_aeg(racer)
-    times.append([racer, total_time, koperdused])
- 
-sorted_times = sorted(times, key=lambda x: x[1])
- 
- 
-def format_time(total_time, fastest=False):
-    if isinstance(total_time, float):
-        total_time = str(total_time)
- 
-    tunnid, minutes = divmod(int(float(total_time)) // 60, 60)
-    seconds = int(float(total_time)) % 60
-    milliseconds = int(total_time.split(".")[1][:3])
- 
-    if fastest:
-        return f"{tunnid:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
+import csv
+
+drivers = ['Kast', 'Tartu', 'Murd', 'Kiku', 'Meinberg']
+laps = 10
+filename = 'Result.csv'
+file_header = ['Ring', 'Nimi', 'Aeg', 'Sektor1', 'Sektor2', 'Sektor3', 'Viga']
+results = []
+minimum_sector_time = 23
+maximum_sector_time = 26
+fastest_lap = ['Unknown', 999]
+fastest_sectors = [['Unknown', 999], ['Unknown', 999], ['Unknown', 999]]
+sector_times = []
+
+
+def generate_random_sector_time(min_time, max_time):
+    thousandth = random.randint(0, 999) / 1000
+    return random.randint(min_time, max_time) + thousandth
+
+
+def calculate_lap_time(min_time, max_time, driver_name):
+    total_time = 0
+    sector_times.clear()
+    for i in range(3):
+        sector_time = generate_random_sector_time(min_time, max_time)
+        if sector_time < fastest_sectors[i][1]:
+            fastest_sectors[i][0] = driver_name
+            fastest_sectors[i][1] = sector_time
+        total_time += sector_time
+        sector_times.append(sector_time)
+    return total_time
+
+
+def get_fastest_lap(driver_name, fastest_data):
+    if driver_name == fastest_data[0]:
+        return format_time(fastest_data[1])
     else:
-        return f"{tunnid:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
- 
- 
-for i, (racer, time, koperdused) in enumerate(sorted_times):
-    total_time = str(time)
-    time_formatted = format_time(total_time)
-    koperdused_formatted = ",".join(map(str, koperdused))
- 
-    fastest_lap_time = lap_times[racer]
-    fastest_formatted = format_time(fastest_lap_time, fastest=True)
- 
-    if i == 0:
-        print(f"{racer:10}{time_formatted:13}[{koperdused_formatted:}] {fastest_formatted:13}")
+        return ""
+
+
+def format_time(seconds, num_milliseconds=3):
+    if hasattr(seconds, '__len__'):
+        return [format_time(s) for s in seconds]
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+    if num_milliseconds > 0:
+        pattern = '%%02d:%%02d:%%0%d.%df' % (num_milliseconds + 3, num_milliseconds)
     else:
-        difference = time - sorted_times[0][1]
-        difference_formatted = format_time(str(difference))
-        print(f"{racer:10}{time_formatted:13}{difference_formatted:13}[{koperdused_formatted:}]")
- 
-print("\nSectors best")
-for sector in range(3):
-    sector_best_time = float('inf')
-    sector_best_racers = []
- 
-    for racer in sector_times:
-        sector_time = sector_times[racer][sector]
-        if sector_time < sector_best_time:
-            sector_best_time = sector_time
-            sector_best_racers = [racer]
-        elif sector_time == sector_best_time:
-            sector_best_racers.append(racer)
- 
-    sector_best_formatted = format_time(sector_best_time)
-    print(f"Sector {sector+1} {' '.join(sector_best_racers)} {sector_best_formatted}")
- 
-dream_lap_time = sum([sector_best for sector_best in sector_times.values()], [])
-dream_lap_time_formatted = format_time(sum(dream_lap_time))
-print(f"Dream lap time: {dream_lap_time_formatted}")
+        pattern = r'%02d:%02d:%02d'
+    if days == 0:
+        return pattern % (hours, minutes, seconds)
+    return ('%d days, ' + pattern) % (days, hours, minutes, seconds)
+
+
+if __name__ == '__main__':
+    with open(filename, 'w', encoding='utf-8', newline='') as file:
+        writer = csv.writer(file, delimiter=';')
+        writer.writerow(file_header)
+        for driver in drivers:
+            lap_time_total = 0
+            error_laps = []
+            for lap in range(laps):
+                has_error = False
+                if random.randint(0, 9) == 2:
+                    lap_time_total += calculate_lap_time(30, 90, 'Unknown')
+                    error_laps.append(lap + 1)
+                    has_error = True
+                else:
+                    this_lap_time = calculate_lap_time(minimum_sector_time, maximum_sector_time, driver)
+                    if this_lap_time < fastest_lap[1]:
+                        fastest_lap[0] = driver
+                        fastest_lap[1] = this_lap_time
+                    lap_time_total += this_lap_time
+                row = [lap + 1, driver, sum(sector_times), sector_times[0], sector_times[1], sector_times[2], has_error]
+                writer.writerow(row)
+            results.append([driver, lap_time_total, error_laps])
+
+    results = sorted(results, key=lambda x: x[1])
+
+    for index, driver_info in enumerate(results):
+        if index > 0:
+            time_difference = format_time(driver_info[1] - results[0][1])
+            print(driver_info[0].ljust(10), format_time(driver_info[1], 3), time_difference, driver_info[2],
+                  get_fastest_lap(driver_info[0], fastest_lap))
+        else:
+            print(driver_info[0].ljust(10), format_time(driver_info[1], 3), driver_info[2],
+                  get_fastest_lap(driver_info[0], fastest_lap))
+
+    print('Sektorite parimad')
+    total_time = 0
+    for index, driver in enumerate(fastest_sectors):
+        total_time += driver[1]
+        print('Sektor', (index + 1), driver[0].ljust(10), format_time(driver[1]))
+    print('Unelmate ring', format_time(total_time
