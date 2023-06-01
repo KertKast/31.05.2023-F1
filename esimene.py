@@ -4,7 +4,7 @@ import csv
 drivers = ['Kert', 'Kiku', 'Maku', 'Tartu', 'Meinberg']
 laps = 10
 filename = 'Result.txt'
-file_header = ['Ring', 'Nimi', 'Aeg', 'Sektor1', 'Sektor2', 'Sektor3', 'Viga']
+file_header = ['Ring', 'Nimi', 'Aeg', 'Sector1', 'Sector2', 'Sector3', 'False']
 results = []
 minimum_sector_time = 23
 maximum_sector_time = 26
@@ -67,6 +67,7 @@ if __name__ == '__main__':
                     error_laps.append(lap + 1)
                     has_error = True
                 else:
+                    
                     this_lap_time = calculate_lap_time(minimum_sector_time, maximum_sector_time, driver)
                     if this_lap_time < fastest_lap[1]:
                         fastest_lap[0] = driver
@@ -87,9 +88,9 @@ if __name__ == '__main__':
             print(driver_info[0].ljust(10), format_time(driver_info[1], 3), driver_info[2],
                   get_fastest_lap(driver_info[0], fastest_lap))
 
-    print('Sektorite parimad')
+    print('Sectors best')
     total_time = 0
     for index, driver in enumerate(fastest_sectors):
         total_time += driver[1]
-        print('Sektor', (index + 1), driver[0].ljust(10), format_time(driver[1]))
-    print('Unelmate ring', format_time(total_time))
+        print('Sector', (index + 1), driver[0].ljust(10), format_time(driver[1]))
+    print('Dreamlap time', format_time(total_time))
