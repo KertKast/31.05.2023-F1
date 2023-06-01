@@ -24,7 +24,7 @@ def sec2time(sec, n_msec=3):
 
 
 if __name__ == '__main__':
-    Filename = 'Result.txt'
+    Filename = 'Result.csv'
     results = []
     fastest_lap = ['Unknown', 9999]
     three_sektors = [['Unknown', 9999], ['Unknown', 9999], ['Unknown', 9999]]
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
         rank += 1
 
-    print('Sektori parimad')
+    print('\nSektori parimad')
     total = sum(driver[1] for driver in three_sektors)
     for idx, driver in enumerate(three_sektors):
         print('Sektor', (idx + 1), driver[0].ljust(10), sec2time(driver[1]))
