@@ -1,3 +1,4 @@
+import os
 import random
 
 
@@ -24,16 +25,18 @@ def sec2time(sec, n_msec=3):
 
 
 if __name__ == '__main__':
-    Filename = 'Result.csv'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    filename = os.path.join(script_dir, 'Result.csv')
+
     results = []
     fastest_lap = ['Unknown', 9999]
     three_sektors = [['Unknown', 9999], ['Unknown', 9999], ['Unknown', 9999]]
     lap_times = {}
     lap_errors = {}
 
-    with open(Filename, 'r', encoding='utf-8') as file:
+    with open('Result.txt', 'r', encoding='utf-8') as file:
         lines = file.readlines()
-        File_header = lines[0]
+        file_header = lines[0]
         for line in lines[1:]:
             data = line.strip().split(';')
             lap = int(data[0])
@@ -84,7 +87,7 @@ if __name__ == '__main__':
 
         rank += 1
 
-    print('\nSektori parimad')
+    print('Sektori parimad')
     total = sum(driver[1] for driver in three_sektors)
     for idx, driver in enumerate(three_sektors):
         print('Sektor', (idx + 1), driver[0].ljust(10), sec2time(driver[1]))
