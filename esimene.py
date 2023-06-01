@@ -4,7 +4,7 @@ import csv
 drivers = ['Kert', 'Kiku', 'Maku', 'Tartu', 'Meinberg']
 laps = 10
 filename = 'Result.txt'
-file_header = ['Ring', 'Nimi', 'Aeg', 'Sector1', 'Sector2', 'Sector3', 'False']
+file_header = ['Lap', 'Name', 'time', 'Sector1', 'Sector2', 'Sector3', 'False']
 results = []
 minimum_sector_time = 23
 maximum_sector_time = 26
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                     error_laps.append(lap + 1)
                     has_error = True
                 else:
-                    
+
                     this_lap_time = calculate_lap_time(minimum_sector_time, maximum_sector_time, driver)
                     if this_lap_time < fastest_lap[1]:
                         fastest_lap[0] = driver
